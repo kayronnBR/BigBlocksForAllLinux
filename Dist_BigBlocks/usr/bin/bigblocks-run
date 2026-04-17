@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Define o caminho do arquivo QML relativo ao script
+QML_FILE="$(dirname "$(readlink -f "$0")")/../share/bigblocks/main.qml"
+
+# Tenta encontrar o interpretador do Qt 6 em caminhos comuns do Mint/Ubuntu
+if [ -f "/usr/lib/qt6/bin/qml" ]; then
+    /usr/lib/qt6/bin/qml "$QML_FILE"
+elif [ -f "/usr/bin/qml6" ]; then
+    qml6 "$QML_FILE"
+elif command -v qtchooser &> /dev/null; then
+    # Tenta forçar via qtchooser se os caminhos diretos falharem
+    qtchooser -run-tool=qml -qt=6 "$QML_FILE"
+else
+    # Se nada funcionar, tenta o qml genérico
+    qml "$QML_FILE"
+fi
+
+# Se o código de saída for erro por falta de Qt
+if [ $? -ne 0 ]; then
+    zenity --error --text="Não foi possível encontrar o Qt 6.\nInstale com: sudo apt install qt6-base-dev qml6-module-qtquick-controls" 2>/dev/null
+    echo "Erro: Qt 6 não configurado."
+fi
